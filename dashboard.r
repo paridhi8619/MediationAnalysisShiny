@@ -25,6 +25,7 @@ ui <- dashboardPage(skin="red",
                     dashboardSidebar(
                       sidebarMenu(
                         menuItem("Data", tabName = "Data", icon = icon("server")),
+                        menuItem("About", tabName = "about", icon = icon("info")),
                         menuItem("Mediation Analysis", tabName = "Results", icon = icon("chart-line")),
                         menuItem("Simulation", tabName = "simulation", icon = icon("sync"))
                         
@@ -57,6 +58,24 @@ ui <- dashboardPage(skin="red",
                         #             #   # style = "overflow-x: scroll;"
                         #             # )
                         #     ),
+                        tabItem(tabName = "about",
+                          h2("About data"),
+                          p("The data was simulated based on a parallel study design studying a treatment vs placebo. Treatment variable,
+                            TRT, is encoded as \"Rx\" for the experimental treatment and \"placebo\" for placebo. There were 120 patients
+                            randomized to each arm. The endpoint of interest is a patient reported outcome, DLQI, at 24 weeks. DLQI
+                            ranges from 0, ..., 30, the lower score the better. Possible mediator variables are:"),
+                          tags$li("itch: Patient self report this measure every day in a diary. The measurements range from 0, ..., 10 and
+                          are averaged every week to give a weekly measure. The lower the score the better. The average of the
+                          measurements taken the week prior to week 24 is provided in this data set."
+                                              # uiOutput('list')
+                          ),
+                          tags$li("redness: Patient self report this measure every day in a diary. The measurements range from 0, ..., 10
+                          and are averaged every week to give a weekly measure. The lower the score the better. The average of
+                          the measurements taken the week prior to week 24 is provided in this data set."),
+                          tags$li("BSA: Measured by the physician at each visit. The measurements range from 0, ..., 100%. The lower
+                        the score, the better. The body surface area reported at week 24 is provided in this data set.")
+                          ),
+                       
                         tabItem(tabName = "Results",
                                 fluidRow(column(6,
                                                 selectInput(inputId = "indVar",choices = c("itch", "BSA", "redness"), 
@@ -74,14 +93,15 @@ ui <- dashboardPage(skin="red",
                                                 textInput("count", "No. of observations", 50)),
                                          column(3, downloadButton("downloadData", "Save Simulated Data")),
                                          column(3, downloadButton("downloadmissingData", "Save Simulated missing Data")),
-                                         sliderInput("medItch", "Mediation%", 0, 1, 0.1)), #0.1, 3, 2.67
+                                         sliderInput("medItch", "Mediation%", 0, 1, 0.25)), #0.1, 3, 2.67
                                                                fluidRow(column(4, verbatimTextOutput("itchMedPerc"))),
-                                fluidRow(column(4,
+                                        fluidRow(column(4,
                                                 plotOutput("itchPlot")),
                                          column(4,
                                                 plotOutput("BSAPlot")),
                                          column(4,
-                                                plotOutput("rednessPlot")))
+                                                plotOutput("rednessPlot"))),
+                                fluidRow(plotOutput(("senstivityPlot")))
                                 
                                 
                         )
@@ -116,7 +136,8 @@ server <- function(input, output) {
     # contcont <- mediate(b, c, sims=100, treat="binTrt", mediator=input$indVar)
     # 
     # print(class(summary(contcont)))
-    plot(contcont1())
+    plot(contcont1(), effect.type = c("indirect", "direct", "total"), xlab = "Effect value", ylab = "Effect type", 
+         main = "Mediation effect by itch", col="blue")
   })
   output$RegSum <- renderPrint({
        summary(contcont1())
@@ -131,8 +152,9 @@ server <- function(input, output) {
                  linetype="dashed")+
       scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))+
       scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))+
-      labs(title="Treatment histogram plot",x="DLQI", y = "Density")+
-      theme_classic()
+      labs(title=("Plot showing Rx versus Placebo effect"),x="DLQI", y = "Density")+
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+      # theme_classic()
   })
   output$table <- DT::renderDataTable({
     fileData
@@ -230,13 +252,16 @@ server <- function(input, output) {
     rednessMed
   })
   output$itchPlot <- renderPlot({
-    plot(itchReactive())
+    plot(itchReactive(), effect.type = c("indirect", "direct", "total"), xlab = "Effect value", ylab = "Effect type", 
+         main = "Mediation effect by itch", col="blue")
   })
   output$BSAPlot <- renderPlot({
-    plot(BSAReactive())
+    plot(BSAReactive(), effect.type = c("indirect", "direct", "total"), xlab = "Effect value", ylab = "Effect type", 
+         main = "Mediation effect by BSA", col="blue")
   })
   output$rednessPlot <- renderPlot({
-    plot(rednessReactive())
+    plot(rednessReactive(), effect.type = c("indirect", "direct", "total"), xlab = "Effect value", ylab = "Effect type", 
+         main = "Mediation effect by redness", col="blue")
   })
   output$itchMedPerc <- renderText({
     paste("Proportions mediated = ", round(itchReactive()$n0, 2))
@@ -258,6 +283,14 @@ server <- function(input, output) {
     }
   )
   
+  output$senstivityPlot <- renderPlot({
+    med.out <- BSAReactive()
+    sens.out <- medsens(med.out, rho.by = 0.1, sims = 100)
+    # par.orig <- par(mfrow = c(2,2))
+    plot(sens.out, sens.par = "rho", main = "DLQI")
+    
+  })
 }
 
 shinyApp(ui, server)
+#dermatology life quality index (DLQI)
