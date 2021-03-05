@@ -17,7 +17,7 @@ library(plyr)
 library(readr)
 library(diagram)
 options(digits=5)
-# df <- read.csv("C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/sim.csv")
+
 fileData <- read.csv("./data/mediation_data.csv")
 
 ui <- dashboardPage(skin="red",
@@ -44,21 +44,6 @@ ui <- dashboardPage(skin="red",
                                 )
                                 
                         ),
-                        #     
-                        #     tabItem(tabName = "Summary",
-                        #             # fluidRow(
-                        #             #   verbatimTextOutput("summaryTable"), style = "overflow-x: scroll; overflow-y: scroll;" 
-                        #             # )
-                        #             # fluidRow(
-                        #             #   verbatimTextOutput("summaryTableTitle")
-                        #             #   #format("Batch wise summary of variables", justify = "centre") 
-                        #             # ),
-                        #             # fluidRow(
-                        #             #   #  verbatimTextOutput("summaryTable"), style = "overflow-x: scroll; overflow-y: scroll;" 
-                        #             #   DT::dataTableOutput("summaryTable"),options = list(pageLength = 20)
-                        #             #   # style = "overflow-x: scroll;"
-                        #             # )
-                        #     ),
                         tabItem(tabName = "about",
                           h2("About data"),
                           p("The data was simulated based on a parallel study design studying a treatment vs placebo. Treatment variable,
@@ -132,23 +117,7 @@ server <- function(input, output) {
     contcont
   })
   output$plot1 <- renderPlot({
-    # browser()
-    
-    
-    # print(class(input$indVar))
-    # if(input$indVar == "itch")
-    #   c <- lm(formula = DLQI ~ binTrt + itch, data=fileData)
-    # 
-    # else if(input$indVar == "BSA")
-    #   c <- lm(formula = DLQI ~ binTrt + BSA, data=fileData)
-    # 
-    # else
-    #   c <- lm(formula = DLQI ~ binTrt + redness, data=fileData)
-    # c <- lm1()
-    # contcont <- mediate(b, c, sims=100, treat="binTrt", mediator=input$indVar)
-    # 
-    # print(class(summary(contcont)))
-    plot(contcont1(), effect.type = c("indirect", "direct", "total"), xlab = "Effect value", ylab = "Effect type", 
+     plot(contcont1(), effect.type = c("indirect", "direct", "total"), xlab = "Effect value", ylab = "Effect type", 
          main = "Mediation effect by itch", col="blue")
   })
   output$RegSum <- renderPrint({
@@ -166,8 +135,7 @@ server <- function(input, output) {
       scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))+
       labs(title=("Plot showing Rx versus Placebo effect"),x="DLQI", y = "Density")+
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-      # theme_classic()
-  })
+    })
   output$table <- DT::renderDataTable({
     fileData
   })
@@ -314,4 +282,3 @@ server <- function(input, output) {
 }
 
 shinyApp(ui, server)
-#dermatology life quality index (DLQI)
