@@ -18,7 +18,7 @@ library(readr)
 library(diagram)
 options(digits=5)
 # df <- read.csv("C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/sim.csv")
-fileData <- read.csv("C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/mediation_data.csv")
+fileData <- read.csv("./data/mediation_data.csv")
 
 ui <- dashboardPage(skin="red",
                     dashboardHeader(title = h4(HTML("Mediation Analysis<br/> Data Viz and Simulation"))
