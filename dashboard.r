@@ -15,6 +15,7 @@ library(mediation)
 library(simstudy)
 library(plyr)
 library(readr)
+library(diagram)
 options(digits=5)
 # df <- read.csv("C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/sim.csv")
 fileData <- read.csv("C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/mediation_data.csv")
@@ -80,7 +81,8 @@ ui <- dashboardPage(skin="red",
                                 fluidRow(column(6,
                                                 selectInput(inputId = "indVar",choices = c("itch", "BSA", "redness"), 
                                                             selected = "itch", label = "Choose the mediating variable:"),
-                                                plotOutput("distPlot")
+                                                plotOutput("distPlot"),
+                                                plotOutput('blockDiag')
                                 ),
                                 column(6,plotOutput("plot1"),
                                        verbatimTextOutput(outputId = "RegSum"))
@@ -112,12 +114,22 @@ ui <- dashboardPage(skin="red",
 
 server <- function(input, output) {
   
-  b <- lm(formula = DLQI ~ as.factor(TRT), data = fileData)
+  # b <- lm(formula = itch ~ TRT, data = fileData)
+  # print(summary(b))
   lm1 <- reactive({
-    lm(reformulate(termlabels = c('as.factor(TRT)', input$indVar), response="DLQI"), data=fileData)
+    mod <- lm(reformulate(termlabels = c('TRT', input$indVar), response="DLQI"), data=fileData)
+    print(summary(mod))
+    mod
+  })
+  lm2 <- reactive({
+    mod <- lm(reformulate(termlabels = c('TRT'), response=input$indVar), data=fileData)
+    print(summary(mod))
+    mod
   })
   contcont1 <- reactive({
-    contcont <- mediate(b, lm1(), sims=100, treat="as.factor(TRT)", mediator=input$indVar)
+    contcont <- mediate(lm2(), lm1(), sims=100, treat='TRT', mediator=input$indVar)
+    print(summary(contcont))
+    contcont
   })
   output$plot1 <- renderPlot({
     # browser()
@@ -190,13 +202,13 @@ server <- function(input, output) {
     finalData <- rbind(dataPlacebo, dataTrt)
     set.seed(input$seed)
     random2=runif(nrow(finalData),min=min(finalData$itch),max=max(finalData$itch))
-    finalData$DLQI=finalData$itch*input$medItch+random2*0.65
+    finalData$DLQI=finalData$itch*input$medItch+random2*0.45
     finalData
   })
   
   itchReactive <- reactive({
     medDataGen <- medDataGen()
-    b <- lm(formula = DLQI ~ as.factor(TRT), data = medDataGen)
+    b <- lm(formula = itch ~ as.factor(TRT), data = medDataGen)
     c <- lm(formula = DLQI ~ as.factor(TRT) + itch, data=medDataGen)
     itchMed <- mediate(b, c, sims=100, treat="as.factor(TRT)", mediator="itch")
     itchMed
@@ -237,7 +249,7 @@ server <- function(input, output) {
   })
   BSAReactive <- reactive({
     df <- mergeData()
-    b <- lm(formula = DLQI ~ as.factor(TRT), data = df)
+    b <- lm(formula = BSA ~ as.factor(TRT), data = df)
     c <- lm(formula = DLQI ~ as.factor(TRT) + BSA, data=df)
     BSAMed <- mediate(b, c, sims=100, treat="as.factor(TRT)", mediator="BSA")
     BSAMed
@@ -246,7 +258,7 @@ server <- function(input, output) {
   rednessReactive <- reactive({
     # browser()
     df <- mergeData()
-    b <- lm(formula = DLQI ~ as.factor(TRT), data = df)
+    b <- lm(formula = redness ~ as.factor(TRT), data = df)
     c <- lm(formula = DLQI ~ as.factor(TRT) + redness, data=df)
     rednessMed <- mediate(b, c, sims=100, treat="as.factor(TRT)", mediator="redness")
     rednessMed
@@ -289,6 +301,15 @@ server <- function(input, output) {
     # par.orig <- par(mfrow = c(2,2))
     plot(sens.out, sens.par = "rho", main = "DLQI")
     
+  })
+  output$blockDiag <- renderPlot({
+    data <- c(0, "'-1.437***'", 0,
+              0, 0, 0, 
+              "'2.66***'", "'-5.123*** (<2e-1)'", 0) 
+    M<- matrix (nrow=3, ncol=3, byrow = TRUE, data=data)
+    plot<- plotmat (M, pos=c(1,2), 
+                    name= c( "itch","TRT", "DLQI"), 
+                    box.type = "rect", box.size = 0.12, box.prop=0.5,  curve=0)
   })
 }
 
