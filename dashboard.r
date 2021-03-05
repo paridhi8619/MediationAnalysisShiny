@@ -1,6 +1,7 @@
-packages <- c("shiny", "shinydashboard", "dplyr", "DT", "shinyBS", "ggplot2", "mice", "shinydashboardPlus", "mediation")
+packages <- c("shiny", "shinydashboard", "dplyr", "DT", "shinyBS", "ggplot2", "mice", 
+              "shinydashboardPlus", "mediation", "plyr")
 install.packages(setdiff(packages, rownames(installed.packages()))) 
- 
+
 
 library(shiny)
 library(shinydashboard)
@@ -15,99 +16,77 @@ library(simstudy)
 library(plyr)
 library(readr)
 options(digits=5)
+# df <- read.csv("C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/sim.csv")
 fileData <- read.csv("C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/mediation_data.csv")
 
 ui <- dashboardPage(skin="red",
                     dashboardHeader(title = h4(HTML("Mediation Analysis<br/> Data Viz and Simulation"))
-                                    ),
+                    ),
                     dashboardSidebar(
                       sidebarMenu(
-                         menuItem("Data", tabName = "Data", icon = icon("server")),
-                        # menuItem("Data Summary", tabName = "Summary", icon = icon("table")),
-                          menuItem("Mediation Analysis", tabName = "Results", icon = icon("chart-line")),
-                          menuItem("Simulation", tabName = "simulation", icon = icon("sync"))
-   
+                        menuItem("Data", tabName = "Data", icon = icon("server")),
+                        menuItem("Mediation Analysis", tabName = "Results", icon = icon("chart-line")),
+                        menuItem("Simulation", tabName = "simulation", icon = icon("sync"))
+                        
                       ),
                       column(10,align = "center", tags$img(src = "PwC_Outline_Logo_White.png",width="70%", style= "margin-top: 350px; "))
                       
                     ),
-                     dashboardBody(
-                       
+                    dashboardBody(
+                      
                       tabItems(
                         #First tab content
                         tabItem(tabName = "Data",
-                                # fluidRow(
-                                #   # infoBox(value = tags$p(style = "font-weight: bold;",35),"Good Batch Count", icon=icon("thumbs-up"), color="green", width = 3),
-                                #   # infoBox(value = tags$p(style = "font-weight: bold;",15),"Bad Batch Count", icon=icon("thumbs-down"), color="red", width = 3)
-                                #   infoBoxOutput("GoodBatchCount"),
-                                #   infoBoxOutput("BadBatchCount")
-                                #),
-                                #uncomment
                                 fluidRow(
                                   DT::dataTableOutput("table"), style = "overflow-x: scroll;"
                                 )
-                                # fluidRow( uiOutput("modals")),
-                                # fluidRow( DT::dataTableOutput("table2"))
-
+                                
                         ),
-                    #     
-                    #     tabItem(tabName = "Summary",
-                    #             # fluidRow(
-                    #             #   verbatimTextOutput("summaryTable"), style = "overflow-x: scroll; overflow-y: scroll;" 
-                    #             # )
-                    #             # fluidRow(
-                    #             #   verbatimTextOutput("summaryTableTitle")
-                    #             #   #format("Batch wise summary of variables", justify = "centre") 
-                    #             # ),
-                    #             # fluidRow(
-                    #             #   #  verbatimTextOutput("summaryTable"), style = "overflow-x: scroll; overflow-y: scroll;" 
-                    #             #   DT::dataTableOutput("summaryTable"),options = list(pageLength = 20)
-                    #             #   # style = "overflow-x: scroll;"
-                    #             # )
-                    #     ),
+                        #     
+                        #     tabItem(tabName = "Summary",
+                        #             # fluidRow(
+                        #             #   verbatimTextOutput("summaryTable"), style = "overflow-x: scroll; overflow-y: scroll;" 
+                        #             # )
+                        #             # fluidRow(
+                        #             #   verbatimTextOutput("summaryTableTitle")
+                        #             #   #format("Batch wise summary of variables", justify = "centre") 
+                        #             # ),
+                        #             # fluidRow(
+                        #             #   #  verbatimTextOutput("summaryTable"), style = "overflow-x: scroll; overflow-y: scroll;" 
+                        #             #   DT::dataTableOutput("summaryTable"),options = list(pageLength = 20)
+                        #             #   # style = "overflow-x: scroll;"
+                        #             # )
+                        #     ),
                         tabItem(tabName = "Results",
                                 fluidRow(column(6,
                                                 selectInput(inputId = "indVar",choices = c("itch", "BSA", "redness"), 
                                                             selected = "itch", label = "Choose the mediating variable:"),
                                                 plotOutput("distPlot")
                                 ),
-                                  column(6,plotOutput("plot1"),
-                                         verbatimTextOutput(outputId = "RegSum"))
-                                # column(5,plotOutput("impFeatPlot"))
-                                # column(5,plotOutput("impFeatPlot"),height = "20%")
+                                column(6,plotOutput("plot1"),
+                                       verbatimTextOutput(outputId = "RegSum"))
                                 )
                         ),
-                    tabItem(tabName = "simulation",
-                            fluidRow(column(3,
-                                            textInput("seed", "Simulation seed",value = 12345)),
-                                     column(3,
-                                            textInput("count", "No. of observations", 50)),
-                                     column(3, downloadButton("downloadData", "Download")),
-                                     sliderInput("medItch", "Mediation%", 0.1, 3, 2.67)),
-                            # fluidRow(column(3,
-                            #                 sliderInput("itchMean", "Mean: itch", round(min(fileData$itch),2), round(max(fileData$itch), 2), value = "")),
-                            #          column(3,
-                            #                 sliderInput("BSAMean", "Mean: BSA", round(min(fileData$BSA), 2), round(max(fileData$BSA), 2), value = "")),
-                            #          column(3,
-                            #                 sliderInput("rednessMean", "Mean: redness", round(min(fileData$redness), 2), round(max(fileData$redness), 2), value = ""))),
-                            # fluidRow(column(3,
-                            #                 sliderInput("itchsd", "Mean: itch", round(min(fileData$itch),2), round(max(fileData$itch), 2), value = "")),
-                            #          column(3,
-                            #                 sliderInput("BSAsd", "Mean: BSA", round(min(fileData$BSA), 2), round(max(fileData$BSA), 2), value = "")),
-                            #          column(3,
-                            #                 sliderInput("rednesssd", "Mean: redness", round(min(fileData$redness), 2), round(max(fileData$redness), 2), value = ""))),
-                            fluidRow(column(4, verbatimTextOutput("itchMedPerc"))),
-                            fluidRow(column(4,
-                                            plotOutput("itchPlot")),
-                                     column(4,
-                                            plotOutput("BSAPlot")),
-                                     column(4,
-                                            plotOutput("rednessPlot")))
-                            
-                            
-                            )
+                        tabItem(tabName = "simulation",
+                                fluidRow(column(3,
+                                                textInput("seed", "Simulation seed",value = 12345)),
+                                         column(3,
+                                                textInput("count", "No. of observations", 50)),
+                                         column(3, downloadButton("downloadData", "Save Simulated Data")),
+                                         column(3, downloadButton("downloadmissingData", "Save Simulated missing Data")),
+                                         sliderInput("medItch", "Mediation%", 0.1, 3, 2.67)),
+                                                               fluidRow(column(4, verbatimTextOutput("itchMedPerc"))),
+                                fluidRow(column(4,
+                                                plotOutput("itchPlot")),
+                                         column(4,
+                                                plotOutput("BSAPlot")),
+                                         column(4,
+                                                plotOutput("rednessPlot")))
+                                
+                                
+                        )
+                      )
                     )
-                     )
                     
 )
 
@@ -140,10 +119,7 @@ server <- function(input, output) {
     plot(contcont1())
   })
   output$RegSum <- renderPrint({
-    # c <- lm1()
-    # 
-    # contcont <- mediate(b, c, sims=100, treat="binTrt", mediator=input$indVar)
-    summary(contcont1())
+       summary(contcont1())
   })
   output$distPlot <- renderPlot({
     mu <- ddply(fileData, "TRT", summarise, grp.mean=mean(DLQI))
@@ -161,15 +137,6 @@ server <- function(input, output) {
   output$table <- DT::renderDataTable({
     fileData
   })
-  
-  
-  
-  # mdeItch <- reactive({
-  #   input$medItch
-  # })
-  # seed <- reactive({
-  #   input$seed
-  # })
   simDataGen <- reactive({
     groupMeans <- aggregate(fileData[, c(2,4,6,8)], list(fileData$TRT), mean)
     cor <- cor(fileData[,c(2,4,6, 8)])
@@ -188,12 +155,11 @@ server <- function(input, output) {
     names(simData) <- c("BSA", "redness")
     simData
   })
- 
+  
   
   medDataGen <- reactive({
     muPlacebo <- 5.925
     muTrt <- 5.925 - 1.437 
-    
     sePlacebo <- 0.232
     seTrt <- sqrt(0.232^2/120 + 0.328^2/120)
     set.seed(input$seed)
@@ -207,19 +173,6 @@ server <- function(input, output) {
   })
   
   itchReactive <- reactive({
-    # muPlacebo <- 5.925
-    # muTrt <- 5.925 - 1.437 
-    # 
-    # sePlacebo <- 0.232
-    # seTrt <- sqrt(0.232^2/120 + 0.328^2/120)
-    # set.seed(input$seed)
-    # count <- input$count
-    # dataPlacebo <- data.frame("itch" = rnorm(count, muPlacebo, sePlacebo), "TRT" = "Placebo")
-    # dataTrt <- data.frame("itch" = rnorm(count, muTrt, 0.328), "TRT" = "Rx")
-    # finalData <- rbind(dataPlacebo, dataTrt)
-    # random2=runif(nrow(finalData),min=min(finalData$itch),max=max(finalData$itch))
-    # finalData$DLQI=finalData$itch*input$medItch+random2*0.65
-    # finalData$BSA = 
     medDataGen <- medDataGen()
     b <- lm(formula = DLQI ~ as.factor(TRT), data = medDataGen)
     c <- lm(formula = DLQI ~ as.factor(TRT) + itch, data=medDataGen)
@@ -232,10 +185,36 @@ server <- function(input, output) {
     df <- cbind(df1, df2)
     df
   })
+  amputeData <- reactive({
+    df <- mergeData()
+    # amputedDf <- f %>%
+    #   group_by(TRT) %>%
+    #   group_map(~ ampute(.x))
+    placeboDf <- subset(df[df$TRT == "Placebo",])
+    RxDf <- placeboDf <- subset(df[df$TRT == "Rx",])
+    
+    placeboPercMissing <- c(24, 22, 34, 34)
+    rxPercMissing <- c(18, 7, 15, 15)
+    
+    countMissingPlacebo <- round((placeboPercMissing * nrow(placeboDf))/100)
+    countMissingRx <- round((rxPercMissing / nrow(RxDf))*100)
+    
+    # placeboDf1 <- ampute(placeboDf[,c(1, 3:5)], prop = 0.24)$amp
+    placeboDf$itch[sample(1:nrow(placeboDf),countMissingPlacebo[1] , replace = FALSE)] <- NA
+    placeboDf$BSA[sample(1:nrow(placeboDf),countMissingPlacebo[2] , replace = FALSE)] <- NA
+    placeboDf$redness[sample(1:nrow(placeboDf),countMissingPlacebo[3] , replace = FALSE)] <- NA
+    placeboDf$DLQI[sample(1:nrow(placeboDf),countMissingPlacebo[4] , replace = FALSE)] <- NA
+    
+    RxDf$itch[sample(1:nrow(RxDf),countMissingRx[1] , replace = FALSE)] <- NA
+    RxDf$BSA[sample(1:nrow(RxDf),countMissingRx[2] , replace = FALSE)] <- NA
+    RxDf$redness[sample(1:nrow(RxDf),countMissingRx[3] , replace = FALSE)] <- NA
+    RxDf$DLQI[sample(1:nrow(RxDf),countMissingRx[4] , replace = FALSE)] <- NA
+    
+    simulatedMissingData <- rbind(placeboDf, RxDf)
+    simulatedMissingData
+  })
   BSAReactive <- reactive({
     df <- mergeData()
-    # write.csv(df, "C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/sim.csv")
-    # print(head(df))
     b <- lm(formula = DLQI ~ as.factor(TRT), data = df)
     c <- lm(formula = DLQI ~ as.factor(TRT) + BSA, data=df)
     BSAMed <- mediate(b, c, sims=100, treat="as.factor(TRT)", mediator="BSA")
@@ -251,7 +230,7 @@ server <- function(input, output) {
     rednessMed
   })
   output$itchPlot <- renderPlot({
-      plot(itchReactive())
+    plot(itchReactive())
   })
   output$BSAPlot <- renderPlot({
     plot(BSAReactive())
@@ -270,7 +249,14 @@ server <- function(input, output) {
       write.csv(mergeData(), file, row.names = FALSE)
     }
   )
- 
+  output$downloadmissingData <- downloadHandler(
+    filename = function() {
+      paste("withMissingData", ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(amputeData(), file, row.names = FALSE)
+    }
+  )
   
 }
 
