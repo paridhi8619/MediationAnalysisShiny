@@ -74,7 +74,7 @@ ui <- dashboardPage(skin="red",
                                                 textInput("count", "No. of observations", 50)),
                                          column(3, downloadButton("downloadData", "Save Simulated Data")),
                                          column(3, downloadButton("downloadmissingData", "Save Simulated missing Data")),
-                                         sliderInput("medItch", "Mediation%", 0.1, 3, 2.67)),
+                                         sliderInput("medItch", "Mediation%", 0, 1, 0.1)), #0.1, 3, 2.67
                                                                fluidRow(column(4, verbatimTextOutput("itchMedPerc"))),
                                 fluidRow(column(4,
                                                 plotOutput("itchPlot")),
@@ -162,11 +162,11 @@ server <- function(input, output) {
     muTrt <- 5.925 - 1.437 
     sePlacebo <- 0.232
     seTrt <- sqrt(0.232^2/120 + 0.328^2/120)
-    set.seed(input$seed)
     count <- input$count
     dataPlacebo <- data.frame("itch" = rnorm(count, muPlacebo, sePlacebo), "TRT" = "Placebo")
     dataTrt <- data.frame("itch" = rnorm(count, muTrt, 0.328), "TRT" = "Rx")
     finalData <- rbind(dataPlacebo, dataTrt)
+    set.seed(input$seed)
     random2=runif(nrow(finalData),min=min(finalData$itch),max=max(finalData$itch))
     finalData$DLQI=finalData$itch*input$medItch+random2*0.65
     finalData
@@ -239,7 +239,7 @@ server <- function(input, output) {
     plot(rednessReactive())
   })
   output$itchMedPerc <- renderText({
-    paste("Proportions mediated = ", round(itchReactive()$n0, 2), "%")
+    paste("Proportions mediated = ", round(itchReactive()$n0, 2))
   })
   output$downloadData <- downloadHandler(
     filename = function() {
