@@ -13,6 +13,7 @@ library(shinydashboardPlus)
 library(mediation)
 library(simstudy)
 library(plyr)
+library(readr)
 options(digits=5)
 fileData <- read.csv("C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/mediation_data.csv")
 
@@ -81,6 +82,7 @@ ui <- dashboardPage(skin="red",
                                             textInput("seed", "Simulation seed",value = 12345)),
                                      column(3,
                                             textInput("count", "No. of observations", 50)),
+                                     column(3, downloadButton("downloadData", "Download")),
                                      sliderInput("medItch", "Mediation%", 0.1, 3, 2.67)),
                             # fluidRow(column(3,
                             #                 sliderInput("itchMean", "Mean: itch", round(min(fileData$itch),2), round(max(fileData$itch), 2), value = "")),
@@ -232,7 +234,8 @@ server <- function(input, output) {
   })
   BSAReactive <- reactive({
     df <- mergeData()
-    print(head(df))
+    # write.csv(df, "C:/Users/paridhij747/Documents/Lilly/LillyShiny/data/sim.csv")
+    # print(head(df))
     b <- lm(formula = DLQI ~ as.factor(TRT), data = df)
     c <- lm(formula = DLQI ~ as.factor(TRT) + BSA, data=df)
     BSAMed <- mediate(b, c, sims=100, treat="as.factor(TRT)", mediator="BSA")
@@ -259,7 +262,14 @@ server <- function(input, output) {
   output$itchMedPerc <- renderText({
     paste("Proportions mediated = ", round(itchReactive()$n0, 2), "%")
   })
-  
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste("data", ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(mergeData(), file, row.names = FALSE)
+    }
+  )
  
   
 }
