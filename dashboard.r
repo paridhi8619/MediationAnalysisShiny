@@ -1,3 +1,10 @@
+############################################################################################################
+## About            :Shiny Dashboard for analysing and simulating the mediating effect
+## Author           : Paridhi Jain
+## Date of Creation : 08-MAR-2021
+############################################################################################################
+
+#### install and load the required packages
 packages <- c("shiny", "shinydashboard", "dplyr", "DT", "shinyBS", "ggplot2", "mice", 
               "shinydashboardPlus", "mediation", "plyr")
 install.packages(setdiff(packages, rownames(installed.packages()))) 
@@ -17,8 +24,13 @@ library(plyr)
 library(readr)
 library(diagram)
 options(digits=5)
+############################################################################################################
 
+############################################################################################################
+# Read thed ata for performing the analysis
 fileData <- read.csv("./data/mediation_data.csv")
+
+############################################################################################################
 
 ui <- dashboardPage(skin="red",
                     dashboardHeader(title = h4(HTML("Mediation Analysis<br/> Data Viz and Simulation"))
@@ -38,7 +50,7 @@ ui <- dashboardPage(skin="red",
                       tags$style(HTML("
                        .content-wrapper {
                     background-color: #F8C471;
-      }
+                       }
                     #RegSum {
                       color: black;
                       background: white;
@@ -85,27 +97,27 @@ ui <- dashboardPage(skin="red",
                         ),
                         
                         tabItem(tabName = "Results",
-                                  fluidRow(column(6, offset = 0, 
-                                                  div(style = "margin:0%", fluidRow(
+                                fluidRow(column(6, offset = 0, 
+                                                div(style = "margin:0%", fluidRow(
                                                   plotOutput("distPlot"))),
-                                                  div(style = "padding: 0px 0px; margin-top:-100px;", #background-color:red;
-                                                      fluidRow(column(6, offset = 0,
-                                                                      selectInput(inputId = "indVar",choices = c("itch", "BSA", "redness"),
-                                                                                  selected = "itch", label = "Choose the mediating variable:"),
-                                                      ))),
-                                                  div(style = "padding: 0px 0px; margin-top:-100px;",
-                                                      )
-                                                  
-                                                  ),
-                                         column(6, offset = 0,
-                                                div( style = "height:300px",
-                                                    fluidRow(
-                                                plotOutput('blockDiag'))),
-                                                  uiOutput("HelpBox")),
-                                      ),
-                                  fluidRow(
-                                column(6,plotOutput("plot1")),
-                                       column(6, verbatimTextOutput(outputId = "RegSum"))),
+                                                div(style = "padding: 0px 0px; margin-top:-100px;", #background-color:red;
+                                                    fluidRow(column(6, offset = 0,
+                                                                    selectInput(inputId = "indVar",choices = c("itch", "BSA", "redness"),
+                                                                                selected = "itch", label = "Choose the mediating variable:"),
+                                                    ))),
+                                                div(style = "padding: 0px 0px; margin-top:-100px;",
+                                                )
+                                                
+                                ),
+                                column(6, offset = 0,
+                                       div( style = "height:300px",
+                                            fluidRow(
+                                              plotOutput('blockDiag'))),
+                                       uiOutput("HelpBox")),
+                                ),
+                                fluidRow(
+                                  column(6,plotOutput("plot1")),
+                                  column(6, verbatimTextOutput(outputId = "RegSum"))),
                                 fluidRow()
                                 
                         ),
@@ -135,22 +147,16 @@ ui <- dashboardPage(skin="red",
 )
 
 server <- function(input, output) {
-  
-  # b <- lm(formula = itch ~ TRT, data = fileData)
-  # print(summary(b))
   lm1 <- reactive({
     mod <- lm(reformulate(termlabels = c('TRT', input$indVar), response="DLQI"), data=fileData)
-    # print(summary(mod))
     mod
   })
   lm2 <- reactive({
     mod <- lm(reformulate(termlabels = c('TRT'), response=input$indVar), data=fileData)
-    # print(summary(mod))
     mod
   })
   contcont1 <- reactive({
     contcont <- mediate(lm2(), lm1(), sims=100, treat='TRT', mediator=input$indVar)
-    # print(summary(contcont))
     contcont
   })
   output$plot1 <- renderPlot({
@@ -197,7 +203,6 @@ server <- function(input, output) {
   
   
   medDataGen <- reactive({
-    # options(scipen = 999)
     finalData <- data.frame()
     muPlacebo <- 5.925
     muTrt <- 4.488 
@@ -294,8 +299,6 @@ server <- function(input, output) {
     paste("Proportions mediated = ", round(itchReactive()$n0, 2))
   })
   output$pval <- renderText({
-    # data=medDataGen()$data
-    # t.test(itch ~ TRT,mu=5, data, alternative="greater")$p.value
     paste("p value for H0:","\u03BC","(placebo) > ", "\u03BC","(Rx) = 5 is ", medDataGen()$pval, sep = "")
   })
   output$downloadData <- downloadHandler(
@@ -318,7 +321,6 @@ server <- function(input, output) {
   output$senstivityPlot <- renderPlot({
     med.out <- itchReactive()
     sens.out <- medsens(med.out, rho.by = 0.1, sims = 100)
-    # par.orig <- par(mfrow = c(2,2))
     plot(sens.out, sens.par = "rho", main = "Sensitivity analysis of mediation effect of itch on DLQI")
     
   })
@@ -335,8 +337,8 @@ server <- function(input, output) {
   },height = 300, width = 500)
   
   output$HelpBox = renderUI({
-   
-      helpText(HTML("ACME : Average causal mediating effect <br>
+    
+    helpText(HTML("ACME : Average causal mediating effect <br>
                ADE: Avergae Direct Effect <br>
                Total Effect = ADE + ACME"))
     
