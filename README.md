@@ -28,3 +28,14 @@ Some of the observations about the results:
    The indirect effect from TRT to DLQI = -1.437 * 2.66 ~ -3.87, which is ACME for itch.
 4. On simulation tab, as the mediation effect is varied, the effect on the mediation plot of itch can be seen clearly, the ACME
    increases with increased mediation, so it the 'proportion mediated' shown on top of the charts.
+5. Changing the sample size makes rejecting the null hypothesis (that the treatment has no effect on the DLQI) easy for the same margin.
+6. The sensitivity plot shows the mediation models is quite robust as rho required for the ACME to switch the signs is > 0.
+
+#############################################################################################################################################
+References:
+1. Baron, R., & Kenny, D. (1986). The moderator-mediator variable distinction in social psychological research: Conceptual, strategic,
+   and statistical considerations. Journal of Personality and Social Psychology, 51, 1173-1182.
+2.Zhang, Zhongheng, Cheng Zheng, Chanmin Kim, Sven Van Poucke, Su Lin, and Peng Lan. "Causal mediation analysis in the context 
+  of clinical research." Annals of translational medicine 4, no. 21 (2016). 
+3. Tingley, D., Yamamoto, T., Hirose, K., Imai, K. and Keele, L. (2014). "mediation: R package for Causal Mediation Analysis", Journal
+   of Statistical Software, Vol. 59, No. 5, pp. 1-38.
