@@ -35,6 +35,25 @@ ui <- dashboardPage(skin="red",
                       
                     ),
                     dashboardBody(
+                      tags$style(HTML("
+                       .content-wrapper {
+                    background-color: #F8C471;
+      }
+                    #RegSum {
+                      color: black;
+                      background: white;
+                      font-family: 'Times New Roman', Times, serif;
+                      font-size: 15px;
+                      height: 100;
+                      # font-style: italic;
+                    }
+                    #indVar{
+                    margin-top:-80px;;
+                    }
+                
+                    ")),
+                      
+                      ####################
                       
                       tabItems(
                         #First tab content
@@ -45,33 +64,46 @@ ui <- dashboardPage(skin="red",
                                 
                         ),
                         tabItem(tabName = "about",
-                          h2("About data"),
-                          p("The data was simulated based on a parallel study design studying a treatment vs placebo. Treatment variable,
+                                h2("About data"),
+                                p("The data was simulated based on a parallel study design studying a treatment vs placebo. Treatment variable,
                             TRT, is encoded as \"Rx\" for the experimental treatment and \"placebo\" for placebo. There were 120 patients
                             randomized to each arm. The endpoint of interest is a patient reported outcome, DLQI, at 24 weeks. DLQI
                             ranges from 0, ..., 30, the lower score the better. Possible mediator variables are:"),
-                          tags$li("itch: Patient self report this measure every day in a diary. The measurements range from 0, ..., 10 and
+                                tags$li("itch: Patient self report this measure every day in a diary. The measurements range from 0, ..., 10 and
                           are averaged every week to give a weekly measure. The lower the score the better. The average of the
                           measurements taken the week prior to week 24 is provided in this data set."
-                                              # uiOutput('list')
-                          ),
-                          tags$li("redness: Patient self report this measure every day in a diary. The measurements range from 0, ..., 10
+                                        # uiOutput('list')
+                                ),
+                                tags$li("redness: Patient self report this measure every day in a diary. The measurements range from 0, ..., 10
                           and are averaged every week to give a weekly measure. The lower the score the better. The average of
                           the measurements taken the week prior to week 24 is provided in this data set."),
-                          tags$li("BSA: Measured by the physician at each visit. The measurements range from 0, ..., 100%. The lower
+                                tags$li("BSA: Measured by the physician at each visit. The measurements range from 0, ..., 100%. The lower
                         the score, the better. The body surface area reported at week 24 is provided in this data set.")
-                          ),
-                       
+                        ),
+                        
                         tabItem(tabName = "Results",
-                                fluidRow(column(6,
-                                                selectInput(inputId = "indVar",choices = c("itch", "BSA", "redness"), 
-                                                            selected = "itch", label = "Choose the mediating variable:"),
-                                                plotOutput("distPlot"),
-                                                plotOutput('blockDiag')
-                                ),
-                                column(6,plotOutput("plot1"),
-                                       verbatimTextOutput(outputId = "RegSum"))
-                                )
+                                  fluidRow(column(6, offset = 0, 
+                                                  div(style = "margin:0%", fluidRow(
+                                                  plotOutput("distPlot"))),
+                                                  div(style = "padding: 0px 0px; margin-top:-100px;", #background-color:red;
+                                                      fluidRow(column(6, offset = 0,
+                                                                      selectInput(inputId = "indVar",choices = c("itch", "BSA", "redness"),
+                                                                                  selected = "itch", label = "Choose the mediating variable:"),
+                                                      ))),
+                                                  div(style = "padding: 0px 0px; margin-top:-100px;",
+                                                      )
+                                                  
+                                                  ),
+                                         column(6, offset = 0,
+                                                div( #background-color:red;
+                                                    fluidRow(
+                                                plotOutput('blockDiag')))),
+                                      ),
+                                  fluidRow(
+                                column(6,plotOutput("plot1")),
+                                       column(6, verbatimTextOutput(outputId = "RegSum"))),
+                                fluidRow()
+                                
                         ),
                         tabItem(tabName = "simulation",
                                 fluidRow(column(3,
@@ -81,8 +113,8 @@ ui <- dashboardPage(skin="red",
                                          column(3, downloadButton("downloadData", "Save Simulated Data")),
                                          column(3, downloadButton("downloadmissingData", "Save Simulated missing Data")),
                                          sliderInput("medItch", "Mediation%", 0, 1, 0.25)), #0.1, 3, 2.67
-                                                               fluidRow(column(4, verbatimTextOutput("itchMedPerc"))),
-                                        fluidRow(column(4,
+                                fluidRow(column(4, verbatimTextOutput("itchMedPerc"))),
+                                fluidRow(column(4,
                                                 plotOutput("itchPlot")),
                                          column(4,
                                                 plotOutput("BSAPlot")),
@@ -117,11 +149,11 @@ server <- function(input, output) {
     contcont
   })
   output$plot1 <- renderPlot({
-     plot(contcont1(), effect.type = c("indirect", "direct", "total"), xlab = "Effect value", ylab = "Effect type", 
-         main = "Mediation effect by itch", col="blue")
-  })
+    plot(contcont1(), effect.type = c("indirect", "direct", "total"), xlab = "Effect value", ylab = "Effect type", 
+         main = paste("Mediation effect by ",input$indVar), col="blue")
+  }, height = 370)
   output$RegSum <- renderPrint({
-       summary(contcont1())
+    summary(contcont1())
   })
   output$distPlot <- renderPlot({
     mu <- ddply(fileData, "TRT", summarise, grp.mean=mean(DLQI))
@@ -135,7 +167,7 @@ server <- function(input, output) {
       scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))+
       labs(title=("Plot showing Rx versus Placebo effect"),x="DLQI", y = "Density")+
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-    })
+  }, height = 300, width = 500)
   output$table <- DT::renderDataTable({
     fileData
   })
@@ -273,12 +305,14 @@ server <- function(input, output) {
   output$blockDiag <- renderPlot({
     data <- c(0, "'-1.437***'", 0,
               0, 0, 0, 
-              "'2.66***'", "'-5.123*** (<2e-1)'", 0) 
+              "'2.66***'", "'-5.123*** (<2e-16)'", 0) 
     M<- matrix (nrow=3, ncol=3, byrow = TRUE, data=data)
     plot<- plotmat (M, pos=c(1,2), 
                     name= c( "itch","TRT", "DLQI"), 
-                    box.type = "rect", box.size = 0.12, box.prop=0.5,  curve=0)
-  })
+                    box.type = "rect", box.size = 0.09, box.prop=0.5,  curve=0,
+                    lcol = 'red', box.col = 'orange', txt.col='white',
+                    main = "Diagram showing mediation effect of 'itch'")
+  },height = 300, width = 500)
 }
 
 shinyApp(ui, server)
