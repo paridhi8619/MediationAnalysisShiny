@@ -47,10 +47,13 @@ ui <- dashboardPage(skin="red",
                       height: 100;
                       # font-style: italic;
                     }
+                    #HelpBox{
+                    color: black;
+                    }
                     #indVar{
                     margin-top:-80px;;
                     }
-                
+                    
                     ")),
                       
                       ####################
@@ -95,9 +98,10 @@ ui <- dashboardPage(skin="red",
                                                   
                                                   ),
                                          column(6, offset = 0,
-                                                div( #background-color:red;
+                                                div( style = "height:300px",
                                                     fluidRow(
-                                                plotOutput('blockDiag')))),
+                                                plotOutput('blockDiag'))),
+                                                  uiOutput("HelpBox")),
                                       ),
                                   fluidRow(
                                 column(6,plotOutput("plot1")),
@@ -109,11 +113,12 @@ ui <- dashboardPage(skin="red",
                                 fluidRow(column(3,
                                                 textInput("seed", "Simulation seed",value = 12345)),
                                          column(3,
-                                                textInput("count", "No. of observations", 50)),
+                                                textInput("count", "No. of observations", 100)),
                                          column(3, downloadButton("downloadData", "Save Simulated Data")),
                                          column(3, downloadButton("downloadmissingData", "Save Simulated missing Data")),
                                          sliderInput("medItch", "Mediation%", 0, 1, 0.25)), #0.1, 3, 2.67
-                                fluidRow(column(4, verbatimTextOutput("itchMedPerc"))),
+                                fluidRow(column(4, verbatimTextOutput("itchMedPerc")),
+                                         column(8, verbatimTextOutput("pval"))),
                                 fluidRow(column(4,
                                                 plotOutput("itchPlot")),
                                          column(4,
@@ -135,17 +140,17 @@ server <- function(input, output) {
   # print(summary(b))
   lm1 <- reactive({
     mod <- lm(reformulate(termlabels = c('TRT', input$indVar), response="DLQI"), data=fileData)
-    print(summary(mod))
+    # print(summary(mod))
     mod
   })
   lm2 <- reactive({
     mod <- lm(reformulate(termlabels = c('TRT'), response=input$indVar), data=fileData)
-    print(summary(mod))
+    # print(summary(mod))
     mod
   })
   contcont1 <- reactive({
     contcont <- mediate(lm2(), lm1(), sims=100, treat='TRT', mediator=input$indVar)
-    print(summary(contcont))
+    # print(summary(contcont))
     contcont
   })
   output$plot1 <- renderPlot({
@@ -177,7 +182,7 @@ server <- function(input, output) {
     sd <- aggregate(fileData[, c(2,4,6,8)], list(fileData$TRT), sd)
     num <- as.numeric(input$count)
     num <- num * 2
-    print(num)
+    # print(num)
     simData <- genCorData(num, mu = c(groupMeans$itch[1], groupMeans$BSA[1], groupMeans$redness[1], groupMeans$DLQI[1]), 
                           sigma = c(sd$itch[1], sd$BSA[1], sd$redness[1], sd$DLQI[1]), corMatrix = cor)
     simData$V2[simData$V2 < min(fileData$BSA)] <-  min(fileData$BSA)
@@ -192,30 +197,40 @@ server <- function(input, output) {
   
   
   medDataGen <- reactive({
+    # options(scipen = 999)
+    finalData <- data.frame()
     muPlacebo <- 5.925
-    muTrt <- 5.925 - 1.437 
-    sePlacebo <- 0.232
-    seTrt <- sqrt(0.232^2/120 + 0.328^2/120)
+    muTrt <- 4.488 
+    sePlacebo <- 2.54
+    seTrt <- 2.53
     count <- input$count
+    set.seed(100)
     dataPlacebo <- data.frame("itch" = rnorm(count, muPlacebo, sePlacebo), "TRT" = "Placebo")
-    dataTrt <- data.frame("itch" = rnorm(count, muTrt, 0.328), "TRT" = "Rx")
+    dataTrt <- data.frame("itch" = rnorm(count, muTrt, seTrt), "TRT" = "Rx")
+    dataPlacebo$itch[dataPlacebo$itch < 0.006] <- 0.0065942 
+    dataPlacebo$itch[dataPlacebo$itch > 9.9919] <- 9.9919 
+    
+    dataTrt$itch[dataTrt$itch < 0.148709] <- 0.148709 
+    dataTrt$itch[dataTrt$itch > 9.8733] <- 9.8733 
+    
     finalData <- rbind(dataPlacebo, dataTrt)
     set.seed(input$seed)
-    random2=runif(nrow(finalData),min=min(finalData$itch),max=max(finalData$itch))
-    finalData$DLQI=finalData$itch*input$medItch+random2*0.45
-    finalData
+    random2=runif(nrow(finalData),min=min(fileData$itch),max=max(fileData$itch))
+    finalData$DLQI=(1.6+finalData$itch*2.7)*input$medItch+random2*(1-input$medItch)*2.7
+    pval <- t.test(formula = DLQI ~ TRT, data = finalData, mu = 5)$p.value
+    list(data=finalData, pval = pval)
   })
   
   itchReactive <- reactive({
-    medDataGen <- medDataGen()
-    b <- lm(formula = itch ~ as.factor(TRT), data = medDataGen)
-    c <- lm(formula = DLQI ~ as.factor(TRT) + itch, data=medDataGen)
+    medDataGen <- medDataGen()$data
+    b <- lm(formula = itch ~ as.factor(TRT), data = medDataGen()$data)
+    c <- lm(formula = DLQI ~ as.factor(TRT) + itch, data=medDataGen()$data)
     itchMed <- mediate(b, c, sims=100, treat="as.factor(TRT)", mediator="itch")
     itchMed
   })
   mergeData <- reactive({
     df1 <- simDataGen()
-    df2 <- medDataGen()
+    df2 <- medDataGen()$data
     df <- cbind(df1, df2)
     df
   })
@@ -278,6 +293,11 @@ server <- function(input, output) {
   output$itchMedPerc <- renderText({
     paste("Proportions mediated = ", round(itchReactive()$n0, 2))
   })
+  output$pval <- renderText({
+    # data=medDataGen()$data
+    # t.test(itch ~ TRT,mu=5, data, alternative="greater")$p.value
+    paste("p value for H0:","\u03BC","(placebo) > ", "\u03BC","(Rx) = 5 is ", medDataGen()$pval, sep = "")
+  })
   output$downloadData <- downloadHandler(
     filename = function() {
       paste("data", ".csv", sep = "")
@@ -296,10 +316,10 @@ server <- function(input, output) {
   )
   
   output$senstivityPlot <- renderPlot({
-    med.out <- BSAReactive()
+    med.out <- itchReactive()
     sens.out <- medsens(med.out, rho.by = 0.1, sims = 100)
     # par.orig <- par(mfrow = c(2,2))
-    plot(sens.out, sens.par = "rho", main = "DLQI")
+    plot(sens.out, sens.par = "rho", main = "Sensitivity analysis of mediation effect of itch on DLQI")
     
   })
   output$blockDiag <- renderPlot({
@@ -313,6 +333,15 @@ server <- function(input, output) {
                     lcol = 'red', box.col = 'orange', txt.col='white',
                     main = "Diagram showing mediation effect of 'itch'")
   },height = 300, width = 500)
+  
+  output$HelpBox = renderUI({
+   
+      helpText(HTML("ACME : Average causal mediating effect <br>
+               ADE: Avergae Direct Effect <br>
+               Total Effect = ADE + ACME"))
+    
+  })
+  
 }
 
 shinyApp(ui, server)
