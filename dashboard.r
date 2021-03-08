@@ -37,8 +37,8 @@ ui <- dashboardPage(skin="red",
                     ),
                     dashboardSidebar(
                       sidebarMenu(
-                        menuItem("Data", tabName = "Data", icon = icon("server")),
                         menuItem("About", tabName = "about", icon = icon("info")),
+                        menuItem("Data", tabName = "Data", icon = icon("server")),
                         menuItem("Mediation Analysis", tabName = "Results", icon = icon("chart-line")),
                         menuItem("Simulation", tabName = "simulation", icon = icon("sync"))
                         
@@ -72,12 +72,7 @@ ui <- dashboardPage(skin="red",
                       
                       tabItems(
                         #First tab content
-                        tabItem(tabName = "Data",
-                                fluidRow(
-                                  DT::dataTableOutput("table"), style = "overflow-x: scroll;"
-                                )
-                                
-                        ),
+                       
                         tabItem(tabName = "about",
                                 h2("About data"),
                                 p("The data was simulated based on a parallel study design studying a treatment vs placebo. Treatment variable,
@@ -93,9 +88,26 @@ ui <- dashboardPage(skin="red",
                           and are averaged every week to give a weekly measure. The lower the score the better. The average of
                           the measurements taken the week prior to week 24 is provided in this data set."),
                                 tags$li("BSA: Measured by the physician at each visit. The measurements range from 0, ..., 100%. The lower
-                        the score, the better. The body surface area reported at week 24 is provided in this data set.")
+                        the score, the better. The body surface area reported at week 24 is provided in this data set."),
+                                h2("Challenge questions"),
+                                tags$li("Challenge #1. The target audience for this data viz are prescribing physicians and thought leaders in
+                                dermatology. The data viz is for 'explanatory' purposes (not 'exploratory'). The story is that treatment
+                                is superior to placebo in terms of patient reported outcomes, DLQI. The treatment effect is mediated
+                                by it's effect on itch. (The reason why treatment improved DLQI so much is due to it's improvement
+                                on itch which directly improves DLQI.) And, moreover, the other variables considered, redness and
+                                BSA, do not mediate the treatment effect on DLQI. We want to tell this story in a compelling way
+                                that is visually appealing."),
+                                                      tags$li("Challenge #2. Based on the provided data set, please simulate a 'realistic' data set that would
+                      have similar marginal and joint distributions and missing data patterns as the data or is based on the
+                      statistical models given in this analysis with the same range of values for each variable, similar missing
+                      data rates (MCAR).")
                         ),
-                        
+                        tabItem(tabName = "Data",
+                                fluidRow(
+                                  DT::dataTableOutput("table"), style = "overflow-x: scroll;"
+                                )
+                                
+                        ),
                         tabItem(tabName = "Results",
                                 fluidRow(column(6, offset = 0, 
                                                 div(style = "margin-left:15px", fluidRow(
@@ -304,7 +316,7 @@ server <- function(input, output) {
     paste("Proportions mediated = ", round(itchReactive()$n0, 2))
   })
   output$pval <- renderText({
-    paste("p value for H0:","\u03BC","(placebo) > ", "\u03BC","(Rx) = 5 is ", medDataGen()$pval, sep = "")
+    paste("p value for H0:","\u03BC","(placebo) - ", "\u03BC","(Rx) = 5 is ", medDataGen()$pval, sep = "")
   })
   output$downloadData <- downloadHandler(
     filename = function() {
