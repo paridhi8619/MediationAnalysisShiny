@@ -54,8 +54,8 @@ ui <- dashboardPage(skin="red",
                     #RegSum {
                       color: black;
                       background: white;
-                      font-family: 'Times New Roman', Times, serif;
-                      font-size: 15px;
+                      # font-family: 'Times New Roman', Times, serif;
+                       font-size: 12px;
                       height: 100;
                       # font-style: italic;
                     }
@@ -128,7 +128,7 @@ ui <- dashboardPage(skin="red",
                                                 textInput("count", "No. of observations", 100)),
                                          column(3, downloadButton("downloadData", "Save Simulated Data")),
                                          column(3, downloadButton("downloadmissingData", "Save Simulated missing Data")),
-                                         sliderInput("medItch", "Mediation%", 0, 1, 0.25)), #0.1, 3, 2.67
+                                         sliderInput("medItch", "Specify Mediation% for itch(used in data generation)", 0, 1, 0.25)), #0.1, 3, 2.67
                                 fluidRow(column(4, verbatimTextOutput("itchMedPerc")),
                                          column(8, verbatimTextOutput("pval"))),
                                 fluidRow(column(4,
@@ -162,7 +162,7 @@ server <- function(input, output) {
   output$plot1 <- renderPlot({
     plot(contcont1(), effect.type = c("indirect", "direct", "total"), xlab = "Effect value", ylab = "Effect type", 
          main = paste("Mediation effect by ",input$indVar), col="blue")
-  }, height = 370)
+  }, height = 320)
   output$RegSum <- renderPrint({
     summary(contcont1())
   })
