@@ -98,7 +98,7 @@ ui <- dashboardPage(skin="red",
                         
                         tabItem(tabName = "Results",
                                 fluidRow(column(6, offset = 0, 
-                                                div(style = "margin:0%", fluidRow(
+                                                div(style = "margin-left:15px", fluidRow(
                                                   plotOutput("distPlot"))),
                                                 div(style = "padding: 0px 0px; margin-top:-100px;", #background-color:red;
                                                     fluidRow(column(6, offset = 0,
@@ -156,6 +156,7 @@ server <- function(input, output) {
     mod
   })
   contcont1 <- reactive({
+    set.seed(200)
     contcont <- mediate(lm2(), lm1(), sims=100, treat='TRT', mediator=input$indVar)
     contcont
   })
@@ -331,7 +332,7 @@ server <- function(input, output) {
   output$blockDiag <- renderPlot({
     data <- c(0, "'-1.437***'", 0,
               0, 0, 0, 
-              "'2.66***'", "'-5.123*** (<2e-16)'", 0) 
+              "'2.66***'", "'-4.983*** (<2e-16)'", 0) 
     M<- matrix (nrow=3, ncol=3, byrow = TRUE, data=data)
     plot<- plotmat (M, pos=c(1,2), 
                     name= c( "itch","TRT", "DLQI"), 
