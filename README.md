@@ -34,7 +34,7 @@ Some of the observations about the results:|
 5. Changing the sample size makes rejecting the null hypothesis (that the treatment has no effect on the DLQI) easy for the same margin.
 6. The sensitivity plot shows the mediation models is quite robust as rho required for the ACME to switch the signs is > 0.
 
-#############################################################################################################################################
+#################################################################################################################
 References:
 1. Baron, R., & Kenny, D. (1986). The moderator-mediator variable distinction in social psychological research: Conceptual, strategic,
    and statistical considerations. Journal of Personality and Social Psychology, 51, 1173-1182.
