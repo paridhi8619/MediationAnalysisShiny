@@ -180,7 +180,11 @@ server <- function(input, output) {
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
   }, height = 300, width = 500)
   output$table <- DT::renderDataTable({
-    fileData
+    datatable(fileData, rownames = FALSE,
+              options = list(
+                columnDefs = list(list(className = 'dt-center', targets = 0:8))
+              ))
+    
   })
   simDataGen <- reactive({
     groupMeans <- aggregate(fileData[, c(2,4,6,8)], list(fileData$TRT), mean)
